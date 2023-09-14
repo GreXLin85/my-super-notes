@@ -14,13 +14,14 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Example {
-    id        Int      @id @default(autoincrement())
-    name      String
+model Note {
+    id        String   @id @default(cuid())
+    title     String
+    content   String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-
-    @@index([name])
+    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+    authorId  String
 }
 
 // Necessary for Next auth
@@ -58,6 +59,7 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+    notes         Note[]
 }
 
 model VerificationToken {
