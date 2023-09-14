@@ -1,5 +1,6 @@
 import { useSession, getSession, signOut } from "next-auth/react"
 import { Loading } from "~/components/LoadingPage"
+import { Sidebar } from "~/components/Sidebar"
 import { Unauthorized } from "~/components/UnauthorizedPage"
 
 export default function Dashboard() {
@@ -14,8 +15,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="">
-      
+    <div className="w-screen h-screen flex flex-row">
+      <Sidebar />
     </div>
   )
 }
