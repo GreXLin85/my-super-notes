@@ -25,6 +25,8 @@ const useStyles = createStyles((theme) => ({
     margin: 'auto',
     marginTop: theme.spacing.xl,
     marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     color: theme.colors[theme.primaryColor][1],
   },
 }));
