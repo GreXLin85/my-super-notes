@@ -133,7 +133,7 @@ const collections = [
     { emoji: '💁‍♀️', label: 'Customers' },
 ];
 
-export function NavbarSearch() {
+export function Sidebar() {
     const { classes } = useStyles();
 
     const mainLinks = links.map((link) => (
