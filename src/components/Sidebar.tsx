@@ -21,6 +21,7 @@ import {
 } from '@tabler/icons-react';
 import { UserButton } from './UserButton';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 const useStyles = createStyles((theme) => ({
     navbar: {
@@ -135,6 +136,8 @@ const collections = [
 
 export function Sidebar() {
     const { classes } = useStyles();
+    const { data: session, status } = useSession()
+
 
     const mainLinks = links.map((link) => (
         <UnstyledButton key={link.label} className={classes.mainLink}>
@@ -166,14 +169,13 @@ export function Sidebar() {
             <Navbar.Section className={classes.section}>
                 <UserButton
                     image="https://i.imgur.com/fGxgcDF.png"
-                    name="Bob Rulebreaker"
-                    email="Product owner"
-                    icon={<IconSelector size="0.9rem" stroke={1.5} />}
+                    name={session?.user.name!}
+                    email={session?.user.email!}
                 />
             </Navbar.Section>
 
             <TextInput
-                placeholder="Search"
+                placeholder="Search in your Notes"
                 size="xs"
                 icon={<IconSearch size="0.8rem" stroke={1.5} />}
                 rightSectionWidth={70}
@@ -189,9 +191,9 @@ export function Sidebar() {
             <Navbar.Section className={classes.section}>
                 <Group className={classes.collectionsHeader} position="apart">
                     <Text size="xs" weight={500} color="dimmed">
-                        Collections
+                        Notes
                     </Text>
-                    <Tooltip label="Create collection" withArrow position="right">
+                    <Tooltip label="Create note" withArrow position="right">
                         <ActionIcon variant="default" size={18}>
                             <IconPlus size="0.8rem" stroke={1.5} />
                         </ActionIcon>
