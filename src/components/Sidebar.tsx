@@ -3,8 +3,6 @@ import {
     Navbar,
     TextInput,
     Code,
-    UnstyledButton,
-    Badge,
     Text,
     Group,
     ActionIcon,
@@ -12,16 +10,18 @@ import {
     rem,
 } from '@mantine/core';
 import {
-    IconBulb,
-    IconUser,
-    IconCheckbox,
     IconSearch,
     IconPlus,
-    IconSelector,
 } from '@tabler/icons-react';
 import { UserButton } from './UserButton';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { type Note } from '@prisma/client';
+import axios from 'axios';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
+import useCurrentNoteStore from '~/store/currentNote';
+import useNotesStore from '~/store/notes';
 
 const useStyles = createStyles((theme) => ({
     navbar: {
@@ -116,56 +116,46 @@ const useStyles = createStyles((theme) => ({
     },
 }));
 
-const links = [
-    { icon: IconBulb, label: 'Activity', notifications: 3 },
-    { icon: IconCheckbox, label: 'Tasks', notifications: 4 },
-    { icon: IconUser, label: 'Contacts' },
-];
-
-const collections = [
-    { emoji: '👍', label: 'Sales' },
-    { emoji: '🚚', label: 'Deliveries' },
-    { emoji: '💸', label: 'Discounts' },
-    { emoji: '💰', label: 'Profits' },
-    { emoji: '✨', label: 'Reports' },
-    { emoji: '🛒', label: 'Orders' },
-    { emoji: '📅', label: 'Events' },
-    { emoji: '🙈', label: 'Debts' },
-    { emoji: '💁‍♀️', label: 'Customers' },
-];
-
-export function Sidebar() {
+export default function Sidebar({ notes }: { notes: Note[] }) {
     const { classes } = useStyles();
+    const router = useRouter()
     const { data: session, status } = useSession()
+    const [isCreatingNote, setIsCreatingNote] = useState(false)
+    const { id: currentNoteId, setCurrentNote } = useCurrentNoteStore()
+    const { notes: notesState, setNotes } = useNotesStore()
+    const [search, setSearch] = useState('')
+    useEffect(() => {
+        setNotes(notes)
+    }, [notes, setNotes])
 
-
-    const mainLinks = links.map((link) => (
-        <UnstyledButton key={link.label} className={classes.mainLink}>
-            <div className={classes.mainLinkInner}>
-                <link.icon size={20} className={classes.mainLinkIcon} stroke={1.5} />
-                <span>{link.label}</span>
-            </div>
-            {link.notifications && (
-                <Badge size="sm" variant="filled" className={classes.mainLinkBadge}>
-                    {link.notifications}
-                </Badge>
-            )}
-        </UnstyledButton>
-    ));
-
-    const collectionLinks = collections.map((collection) => (
+    const noteLinks = notesState.filter(
+        (note) =>
+            note.title?.toLowerCase().includes(search.toLowerCase()) ||
+            note.content?.toLowerCase().includes(search.toLowerCase())
+    ).map((note) => (
         <Link
-            href="/"
-            key={collection.label}
-            className={classes.collectionLink}
+            href={"/dashboard/note/" + note.id}
+            key={note.id}
+            className={classes.collectionLink + " truncate"}
+            passHref={true}
+            shallow={false}
+            onClick={() => {
+                setCurrentNote?.(note.id)
+            }}
         >
-            <span style={{ marginRight: rem(9), fontSize: rem(16) }}>{collection.emoji}</span>{' '}
-            {collection.label}
+            {currentNoteId == note.id ? "* " : null} {note.title ? note.title : <b>{"(Untitled)"}</b>}
         </Link>
     ));
 
+    const handleCreateNote = async () => {
+        const note = await axios.post<{ data: Note }>('/api/note/create')
+
+        return note
+    }
+
+
     return (
-        <Navbar height={700} width={{ sm: 300 }} p="md" className={classes.navbar}>
+        <Navbar p="md" className={classes.navbar + " h-full overflow-y-auto overflow-x-hidden w-96"}>
             <Navbar.Section className={classes.section}>
                 <UserButton
                     image="https://i.imgur.com/fGxgcDF.png"
@@ -181,12 +171,10 @@ export function Sidebar() {
                 rightSectionWidth={70}
                 rightSection={<Code className={classes.searchCode}>Ctrl + K</Code>}
                 styles={{ rightSection: { pointerEvents: 'none' } }}
+                value={search}
+                onChange={(event) => setSearch(event.currentTarget.value)}
                 mb="sm"
             />
-
-            <Navbar.Section className={classes.section}>
-                <div className={classes.mainLinks}>{mainLinks}</div>
-            </Navbar.Section>
 
             <Navbar.Section className={classes.section}>
                 <Group className={classes.collectionsHeader} position="apart">
@@ -194,12 +182,17 @@ export function Sidebar() {
                         Notes
                     </Text>
                     <Tooltip label="Create note" withArrow position="right">
-                        <ActionIcon variant="default" size={18}>
+                        <ActionIcon variant="default" loading={isCreatingNote} onClick={async () => {
+                            setIsCreatingNote(true)
+                            const note = await handleCreateNote()
+                            void router.push('/dashboard/note/' + note.data.data.id)
+                            setIsCreatingNote(false)
+                        }} size={18}>
                             <IconPlus size="0.8rem" stroke={1.5} />
                         </ActionIcon>
                     </Tooltip>
                 </Group>
-                <div className={classes.collections}>{collectionLinks}</div>
+                <div className={classes.collections}>{noteLinks}</div>
             </Navbar.Section>
         </Navbar>
     );

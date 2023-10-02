@@ -1,9 +1,13 @@
-import { Container } from "@mantine/core"
+import { Button, Container } from "@mantine/core"
 import React, { useRef } from "react"
 import { useIntersection } from '@mantine/hooks';
 import SignInButton from "./SignInButton";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
+import GoToDashboardButton from "./GoToDashboardButton";
 
 export default function Hero() {
+    const { data: session, status } = useSession()
     const heroRef = useRef();
 
     // Intersection observers
@@ -23,7 +27,10 @@ export default function Hero() {
             <p>Quickly create your notes with built-in AI features</p>
         </h3>
         <div className="flex justify-center mt-5">
-            <SignInButton>Get started with Google</SignInButton>
+            {status === "authenticated" && <GoToDashboardButton />}
+
+            {(status === "unauthenticated" || status === "loading") && <SignInButton>Sign in with Google to Get Started</SignInButton>}
+
         </div>
 
     </Container>
